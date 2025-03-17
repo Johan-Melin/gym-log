@@ -1,7 +1,6 @@
 import { Stack, Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { ScreenContent } from '~/components/ScreenContent';
 import { Text } from '~/components/nativewindui/Text';
 
 export default function Home() {
