@@ -8,8 +8,11 @@ export default function Home() {
     <>
       <Stack.Screen options={{ title: 'Tab One' }} />
       <View style={styles.container}>
-        <Link href="./nativewindui-examples" style={{ marginBottom: 8 }}>
+        <Link href="/nativewindui-examples" style={{ marginBottom: 8 }}>
           <Text>Nativewind UI Examples</Text>
+        </Link>
+        <Link href="/firestore" style={{ marginBottom: 8 }}>
+          <Text>FireStore test</Text>
         </Link>
       </View>
     </>
