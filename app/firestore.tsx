@@ -1,5 +1,14 @@
 import { Stack } from 'expo-router';
-import { collection, getDocs, addDoc, query, orderBy, Timestamp } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+  Timestamp,
+} from 'firebase/firestore';
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 
@@ -72,6 +81,19 @@ export default function Home() {
     }
   };
 
+  const deleteDocument = async (docId: string) => {
+    try {
+      setStatus('Deleting document...');
+      const docRef = doc(db, 'test', docId);
+      await deleteDoc(docRef);
+      setStatus(`Document deleted successfully ✅`);
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      setStatus(`Error deleting document: ${error.message} ❌`);
+    }
+  };
+
   const formatTimestamp = (timestamp: Timestamp) => {
     if (!timestamp) return 'Unknown date';
     const date = new Date(timestamp.seconds * 1000);
@@ -105,9 +127,17 @@ export default function Home() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
             {documents.map((doc) => (
               <View key={doc.id} className="mb-4 rounded-lg border border-border bg-card p-4">
-                <Text variant="subhead" className="font-medium">
-                  ID: {doc.id}
-                </Text>
+                <View className="flex-row items-center justify-between">
+                  <Text variant="subhead" className="font-medium">
+                    ID: {doc.id}
+                  </Text>
+                  <Button
+                    variant="plain"
+                    onPress={() => deleteDocument(doc.id)}
+                    className="bg-destructive/10 rounded-md px-2 py-1">
+                    <Text className="text-destructive">Delete</Text>
+                  </Button>
+                </View>
                 <Text className="mt-1">{doc.message}</Text>
                 <Text variant="caption1" className="mt-2 text-muted-foreground">
                   {formatTimestamp(doc.timestamp)}
