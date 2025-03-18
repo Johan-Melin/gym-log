@@ -1,40 +1,61 @@
-import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { Stack } from 'expo-router';
+import { collection, getDocs, addDoc, query, orderBy, Timestamp } from 'firebase/firestore';
 import React, { useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, ScrollView, RefreshControl } from 'react-native';
 
 import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
 import { db } from '~/lib/firebase';
 
+type TestDocument = {
+  id: string;
+  message: string;
+  timestamp: Timestamp;
+};
+
 export default function Home() {
-  const [status, setStatus] = useState('Testing Firebase connection...');
+  const [status, setStatus] = useState('');
+  const [documents, setDocuments] = useState<TestDocument[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Test Firebase connection
+  const fetchData = async () => {
+    try {
+      setStatus('Fetching documents...');
+
+      const q = query(collection(db, 'test'), orderBy('timestamp', 'desc'));
+      const querySnapshot = await getDocs(q);
+
+      const docsArray: TestDocument[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        docsArray.push({
+          id: doc.id,
+          message: data.message || '',
+          timestamp: data.timestamp,
+        });
+      });
+
+      setDocuments(docsArray);
+      setStatus(`Fetched ${docsArray.length} documents ✅`);
+    } catch (error) {
+      console.error('Firebase error:', error);
+      setStatus(`Firebase error: ${error.message} ❌`);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    const testConnection = async () => {
-      try {
-        const startTime = Date.now();
-        setStatus('Testing Firebase connection...');
-        console.log('Starting Firebase connection test:', new Date().toISOString());
-
-        // Check if the database is accessible - no need for any collections to exist
-        await getDocs(collection(db, 'test')); // This works even if collection doesn't exist yet
-
-        const endTime = Date.now();
-        console.log(`Firebase connection test completed in ${endTime - startTime}ms`);
-        setStatus(
-          'Firebase connected successfully! ✅\nCreate a document to see it in Firebase Console.'
-        );
-      } catch (error) {
-        console.error('Firebase error:', error);
-        setStatus(`Firebase error: ${error.message} ❌`);
-      }
-    };
-
-    testConnection();
+    fetchData();
   }, []);
 
-  // Function to add a test document
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
+
   const addTestDocument = async () => {
     try {
       setStatus('Adding test document...');
@@ -42,19 +63,62 @@ export default function Home() {
         message: 'Hello Firebase!',
         timestamp: new Date(),
       });
-      setStatus(`Document added with ID: ${docRef.id} ✅\nCheck Firebase Console to see it!`);
+      setStatus(`Document added with ID: ${docRef.id} ✅`);
+
+      fetchData();
     } catch (error) {
       console.error('Error adding document:', error);
       setStatus(`Error adding document: ${error.message} ❌`);
     }
   };
 
+  const formatTimestamp = (timestamp: Timestamp) => {
+    if (!timestamp) return 'Unknown date';
+    const date = new Date(timestamp.seconds * 1000);
+    return date.toLocaleString();
+  };
+
   return (
-    <View className="gap-4 p-6">
-      <Text>{status}</Text>
-      <Button variant="secondary" onPress={addTestDocument}>
-        <Text>Add Test Document</Text>
-      </Button>
-    </View>
+    <>
+      <Stack.Screen options={{ title: 'Firestore Test' }} />
+      <View className="flex-1 p-6">
+        <Button variant="secondary" onPress={addTestDocument} className="mb-4">
+          <Text>Add Test Document</Text>
+        </Button>
+
+        <Button variant="secondary" onPress={() => fetchData()} className="mb-4">
+          <Text>Refresh Documents</Text>
+        </Button>
+
+        <Text variant="caption1" className="mb-4">
+          {status}
+        </Text>
+
+        <Text variant="heading" className="mb-2">
+          Test Documents:
+        </Text>
+        {loading ? (
+          <Text>Loading documents...</Text>
+        ) : documents.length > 0 ? (
+          <ScrollView
+            className="flex-1"
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+            {documents.map((doc) => (
+              <View key={doc.id} className="mb-4 rounded-lg border border-border bg-card p-4">
+                <Text variant="subhead" className="font-medium">
+                  ID: {doc.id}
+                </Text>
+                <Text className="mt-1">{doc.message}</Text>
+                <Text variant="caption1" className="mt-2 text-muted-foreground">
+                  {formatTimestamp(doc.timestamp)}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
+          <Text>No documents found. Add your first document!</Text>
+        )}
+      </View>
+    </>
   );
 }
