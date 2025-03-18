@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  CACHE_SIZE_UNLIMITED,
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -18,20 +23,20 @@ const app = initializeApp(firebaseConfig);
 // Use simple auth initialization for now
 const auth = getAuth(app);
 
-// Initialize Firestore
-const db = getFirestore(app);
+// Initialize Firestore with persistent cache
+let db;
 try {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-    } else if (err.code === 'unimplemented') {
-      console.warn(
-        'The current browser does not support all of the features required to enable persistence.'
-      );
-    }
+  // Initialize with persistence
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+    }),
   });
-} catch (err) {
-  console.warn('Error enabling persistence:', err);
+} catch (error) {
+  console.warn('Error initializing Firestore with persistence:', error);
+
+  // Fallback to standard initialization without persistence
+  db = getFirestore(app);
 }
 
 export { app, auth, db };
