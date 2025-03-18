@@ -13,8 +13,13 @@ export default function Home() {
   useEffect(() => {
     const testConnection = async () => {
       try {
-        // Try to fetch a document
+        const startTime = Date.now();
+        setStatus('Testing Firebase connection...');
+        console.log('Starting Firebase connection test:', new Date().toISOString());
+
         await getDocs(collection(db, 'test'));
+        const endTime = Date.now();
+        console.log(`Firebase connection test completed in ${endTime - startTime}ms`);
         setStatus('Firebase connected successfully! ✅');
       } catch (error) {
         console.error('Firebase error:', error);
