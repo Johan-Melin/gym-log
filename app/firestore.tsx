@@ -17,10 +17,14 @@ export default function Home() {
         setStatus('Testing Firebase connection...');
         console.log('Starting Firebase connection test:', new Date().toISOString());
 
-        await getDocs(collection(db, 'test'));
+        // Check if the database is accessible - no need for any collections to exist
+        await getDocs(collection(db, 'test')); // This works even if collection doesn't exist yet
+
         const endTime = Date.now();
         console.log(`Firebase connection test completed in ${endTime - startTime}ms`);
-        setStatus('Firebase connected successfully! ✅');
+        setStatus(
+          'Firebase connected successfully! ✅\nCreate a document to see it in Firebase Console.'
+        );
       } catch (error) {
         console.error('Firebase error:', error);
         setStatus(`Firebase error: ${error.message} ❌`);
@@ -38,7 +42,7 @@ export default function Home() {
         message: 'Hello Firebase!',
         timestamp: new Date(),
       });
-      setStatus(`Document added with ID: ${docRef.id} ✅`);
+      setStatus(`Document added with ID: ${docRef.id} ✅\nCheck Firebase Console to see it!`);
     } catch (error) {
       console.error('Error adding document:', error);
       setStatus(`Error adding document: ${error.message} ❌`);
@@ -46,10 +50,10 @@ export default function Home() {
   };
 
   return (
-    <View className="gap-4">
+    <View className="gap-4 p-6">
       <Text>{status}</Text>
-      <Button onPress={addTestDocument}>
-        <Text className="text-white">Add Test Document</Text>
+      <Button variant="secondary" onPress={addTestDocument}>
+        <Text>Add Test Document</Text>
       </Button>
     </View>
   );
