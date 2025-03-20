@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeAuth } from 'firebase/auth';
 import {
   getFirestore,
   initializeFirestore,
@@ -21,7 +21,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Use simple auth initialization for now
-const auth = getAuth(app);
+const auth = initializeAuth(app);
 
 // Initialize Firestore with persistent cache
 let db;
