@@ -5,7 +5,7 @@ import { Text, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 
 import { auth } from '~/lib/firebase';
 
-export const Auth = () => {
+export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -30,27 +30,21 @@ export const Auth = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <SafeAreaView>
+      <Text>Login</Text>
+      <TextInput placeholder="email" value={email} onChangeText={setEmail} />
       <TextInput
-        style={styles.textInput}
-        placeholder="email"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.textInput}
         placeholder="password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
-      <TouchableOpacity style={styles.button} onPress={signIn}>
-        <Text style={styles.text}>Login</Text>
+      <TouchableOpacity onPress={signIn}>
+        <Text>Login</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={signUp}>
-        <Text style={styles.text}>Make Account</Text>
+      <TouchableOpacity onPress={signUp}>
+        <Text>Make Account</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
-};
+}

@@ -14,6 +14,9 @@ export default function Home() {
         <Link href="/firestore" style={{ marginBottom: 8 }}>
           <Text>FireStore test</Text>
         </Link>
+        <Link href="/auth" style={{ marginBottom: 8 }}>
+          <Text>Auth test</Text>
+        </Link>
       </View>
     </>
   );
