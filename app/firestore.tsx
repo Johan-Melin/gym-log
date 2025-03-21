@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { User } from 'firebase/auth';
 import {
   collection,
   getDocs,
@@ -14,7 +15,7 @@ import { View, ScrollView, RefreshControl } from 'react-native';
 
 import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
-import { db } from '~/lib/firebase';
+import { db, auth } from '~/lib/firebase';
 
 type TestDocument = {
   id: string;
@@ -27,12 +28,33 @@ export default function Home() {
   const [documents, setDocuments] = useState<TestDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const fetchData = async () => {
     try {
-      setStatus('Fetching documents...');
+      if (!currentUser) {
+        setStatus('You must be logged in to view your documents');
+        setLoading(false);
+        return;
+      }
 
-      const q = query(collection(db, 'test'), orderBy('timestamp', 'desc'));
+      setStatus('Fetching your documents...');
+
+      // Add a where clause to only get documents created by the current user
+      const q = query(
+        collection(db, 'test'),
+        where('userId', '==', currentUser.uid),
+        orderBy('timestamp', 'desc')
+      );
+
       const querySnapshot = await getDocs(q);
 
       const docsArray: TestDocument[] = [];
@@ -46,7 +68,7 @@ export default function Home() {
       });
 
       setDocuments(docsArray);
-      setStatus(`Fetched ${docsArray.length} documents ✅`);
+      setStatus(`Fetched ${docsArray.length} of your documents ✅`);
     } catch (error) {
       console.error('Firebase error:', error);
       setStatus(`Firebase error: ${error.message} ❌`);
