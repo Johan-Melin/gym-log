@@ -87,7 +87,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentUser]);
 
   const onRefresh = () => {
     setRefreshing(true);
