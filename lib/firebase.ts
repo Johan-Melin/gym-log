@@ -5,6 +5,7 @@ import {
   initializeFirestore,
   persistentLocalCache,
   CACHE_SIZE_UNLIMITED,
+  Firestore,
 } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -24,7 +25,7 @@ const app = initializeApp(firebaseConfig);
 const auth = initializeAuth(app);
 
 // Initialize Firestore with persistent cache
-let db;
+let db: Firestore;
 try {
   // Initialize with persistence
   db = initializeFirestore(app, {

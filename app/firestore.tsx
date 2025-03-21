@@ -9,8 +9,9 @@ import {
   query,
   orderBy,
   Timestamp,
+  where,
 } from 'firebase/firestore';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 
 import { Button } from '~/components/nativewindui/Button';
@@ -21,6 +22,7 @@ type TestDocument = {
   id: string;
   message: string;
   timestamp: Timestamp;
+  userId: string;
 };
 
 export default function Home() {
@@ -64,6 +66,7 @@ export default function Home() {
           id: doc.id,
           message: data.message || '',
           timestamp: data.timestamp,
+          userId: data.userId || '',
         });
       });
 
@@ -71,7 +74,11 @@ export default function Home() {
       setStatus(`Fetched ${docsArray.length} of your documents ✅`);
     } catch (error) {
       console.error('Firebase error:', error);
-      setStatus(`Firebase error: ${error.message} ❌`);
+      if (error instanceof Error) {
+        setStatus(`Firebase error: ${error.message} ❌`);
+      } else {
+        setStatus('An unknown error occurred ❌');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -89,17 +96,23 @@ export default function Home() {
 
   const addTestDocument = async () => {
     try {
+      if (!currentUser) {
+        setStatus('You must be logged in to add documents');
+        return;
+      }
+
       setStatus('Adding test document...');
       const docRef = await addDoc(collection(db, 'test'), {
         message: 'Hello Firebase!',
         timestamp: new Date(),
+        userId: currentUser.uid,
       });
       setStatus(`Document added with ID: ${docRef.id} ✅`);
 
       fetchData();
     } catch (error) {
       console.error('Error adding document:', error);
-      setStatus(`Error adding document: ${error.message} ❌`);
+      setStatus(`Error adding document: ${error} ❌`);
     }
   };
 
@@ -112,7 +125,7 @@ export default function Home() {
       fetchData();
     } catch (error) {
       console.error('Error deleting document:', error);
-      setStatus(`Error deleting document: ${error.message} ❌`);
+      setStatus(`Error deleting document: ${error} ❌`);
     }
   };
 
